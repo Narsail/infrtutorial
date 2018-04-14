@@ -43,6 +43,7 @@ workflows:
       - push-to-docker-hub:
           requires:
             - build
+          context: dockerhub
           filters:
             branches:
               only: master
