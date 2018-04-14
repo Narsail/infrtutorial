@@ -34,6 +34,32 @@ jobs:
           root: ./
           paths:
             - k8s-*.yml
+  deploy-to-staging:
+    docker:
+      - image: google/cloud-sdk:alpine
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: Install dependencies
+          command: apk add --update --no-cache libintl gettext openjdk7-jre
+      - run:
+          name: Install Kubectl
+          command: gcloud components install app-engine-java kubectl
+      - run:
+          name: Template k8s config
+          command: for i in /tmp/workspace/k8s-*.yml; do envsubst < "$i" > $(basename "$i"); done
+      - run:
+          name: Deploy to staging
+          command: |
+            echo "$GOOGLE_KEY" > key.json # Google Cloud service account key
+            gcloud auth activate-service-account --key-file key.json
+            gcloud config set compute/zone us-central1-a
+            gcloud config set project infrtutorial
+            gcloud container clusters get-credentials infrtutorial
+
+            kubectl apply -f k8s-deployment.yml
+            kubectl rollout status deployment/infrtutorial
 
 workflows:
   version: 2
@@ -44,6 +70,13 @@ workflows:
           requires:
             - build
           context: dockerhub
+          filters:
+            branches:
+              only: master
+      - deploy-to-staging:
+          requires:
+            - push-to-docker-hub
+          context: k8s
           filters:
             branches:
               only: master

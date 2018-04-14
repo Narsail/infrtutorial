@@ -1,0 +1,23 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: infrtutorial
+  labels:
+    app: infrtutorial
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: infrtutorial
+  template:
+    metadata:
+      labels:
+        app: infrtutorial
+    spec:
+      containers:
+      - name: infrtutorial
+        image: narsail/infrtutorial:$CIRCLE_SHA1
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
