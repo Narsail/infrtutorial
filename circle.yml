@@ -27,8 +27,7 @@ jobs:
             docker build -t api .
             docker tag api narsail/infrtutorial:latest
             docker tag api narsail/infrtutorial:$CIRCLE_SHA1
-            echo $DOCKER_PASS
-            docker login -u $DOCKER_USER --password-stdin
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
             docker push narsail/infrtutorial:latest
             docker push narsail/infrtutorial:$CIRCLE_SHA1
       - persist_to_workspace:
