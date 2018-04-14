@@ -1,52 +1,18 @@
 version: 2
 
 jobs:
-  macos:
-    macos:
-      xcode: "9.2"
+  build:
+    docker:
+      - image: norionomura/swift:swift-4.1-branch
     steps:
       - checkout
+      - run: apt-get update
+      - run: apt-get install -yq libssl-dev pkg-config
       - run: swift build
       - run: swift test
 
-  linux:
-    docker:
-      - image: codevapor/swift:4.1
-    steps:
-      - checkout
-      - run: 
-          name: Compile code
-          command: swift build
-      - run: 
-          name: Run unit tests
-          command: swift test
-      - run: 
-          name: Compile code with optimizations
-          command: swift build -c release
-
-  swiftlint:
-    docker:
-      - image: norionomura/swiftlint
-    steps:
-      - checkout
-      - run: swiftlint
 workflows:
   version: 2
   tests:
     jobs:
-      - linux
-      - swiftlint
-      # - macos
-
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - linux
-      # - macos
-      
+      - build
