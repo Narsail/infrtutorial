@@ -10,9 +10,39 @@ jobs:
       - run: apt-get install -yq libssl-dev pkg-config
       - run: swift build
       - run: swift test
+  push-to-docker-hub:
+    docker:
+      - image: docker:latest
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update --no-cache curl jq python py-pip
+            pip install --upgrade --no-cache-dir awscli botocore==1.8.42
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t api .
+            docker tag api narsail/infrtutorial:latest
+            docker tag api narsail/infrtutorial:$CIRCLE_SHA1
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
+            docker push narsail/infrtutorial:latest
+            docker push narsail/infrtutorial:$CIRCLE_SHA1
+      - persist_to_workspace:
+          root: ./
+          paths:
+            - k8s-*.yml
 
 workflows:
   version: 2
   tests:
     jobs:
       - build
+      - push-to-docker-hub:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
